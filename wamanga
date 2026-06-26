@@ -1,0 +1,61 @@
+export default {
+  id: "ru.wamanga",
+  name: "Wamanga",
+  baseUrl: "https://wamanga.ru",
+
+  headers: {
+    "user-agent": "Mozilla/5.0"
+  },
+
+  // 🔎 поиск
+  async search(query) {
+    const res = await fetch(`${this.baseUrl}/api/search/${query}`);
+    return await res.json();
+  },
+
+  // 📚 страница манги
+  async mangaDetails(url) {
+    const res = await fetch(`${this.baseUrl}${url}`);
+    const html = await res.text();
+
+    return {
+      html
+    };
+  },
+
+  // 📖 главы (ПАРСИМ ИЗ HTML)
+  getChapters(html) {
+    const regex = /href="(\/manga\/[^"]*glava[^"]*)"/g;
+    let match;
+    const chapters = [];
+
+    while ((match = regex.exec(html)) !== null) {
+      chapters.push({
+        url: match[1],
+        name: "Глава"
+      });
+    }
+
+    return chapters;
+  },
+
+  // 🖼 страницы главы
+  getPages(html) {
+    const regex = /<img[^>]+src="([^"]+)"/g;
+    let match;
+    const pages = [];
+
+    while ((match = regex.exec(html)) !== null) {
+      pages.push(match[1]);
+    }
+
+    return pages;
+  },
+
+  async chapterPages(url) {
+    const res = await fetch(`${this.baseUrl}${url}`);
+    const html = await res.text();
+
+    return this.getPages(html);
+  }
+};
